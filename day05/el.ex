@@ -31,7 +31,7 @@ defmodule Day05 do
     }
   end
 
-  def execute_opcode({%{memory: _, pc: pointer, io: {input, output}} = program, instruction}) do
+  def execute_opcode_a({%{memory: _, pc: pointer, io: {input, output}} = program, instruction}) do
     case instruction do
       {3, [a | _]} -> %{program |
         memory: a.(program, input.()),
@@ -46,9 +46,29 @@ defmodule Day05 do
     end
   end
 
+  def execute_opcode_b({%{memory: _, pc: pointer} = program, instruction}) do
+    case instruction do
+      {5, [a, b | _]} -> %{program |
+        pc: (if a.(program, {:i}) != 0, do: b.(program, {:i}), else: pointer + 3)
+      }
+      {6, [a, b | _]} -> %{program |
+        pc: (if a.(program, {:i}) == 0, do: b.(program, {:i}), else: pointer + 3)
+      }
+      {7, [a, b, c]} -> %{program |
+        memory: c.(program, (if a.(program, {:i}) < b.(program, {:i}), do: 1, else: 0)),
+        pc: pointer + 4
+      }
+      {8, [a, b, c]} -> %{program |
+        memory: c.(program, (if a.(program, {:i}) == b.(program, {:i}), do: 1, else: 0)),
+        pc: pointer + 4
+      }
+      inst -> Day05.execute_opcode_a({program, inst})
+    end
+  end
+
   def run_program(program) do
     case program do
-      %{memory: _, pc: _, io: _} -> program |> decode_opcode |> execute_opcode |> run_program
+      %{memory: _, pc: _, io: _} -> program |> decode_opcode |> execute_opcode_b |> run_program
       %{memory: memory} -> memory
     end
   end
