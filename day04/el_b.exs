@@ -1,24 +1,29 @@
 Code.require_file("el.ex", __DIR__)
 
 defmodule Day04.B do
-  def valid_password(x) do
-    digits = Integer.digits(x)
-    pairs = Enum.chunk_every(digits, 2, 1, :discard)
-    triples = Enum.chunk_every(digits, 3, 1, :discard)
-    Enum.all?(pairs, fn ([a, b]) -> a <= b end)
-      and Enum.count(pairs, fn ([a, b]) -> a == b end) != Enum.count(triples, fn ([a, b, c]) -> a == b and b == c end)
+  def label_digits(digits) do
+    digits
+    |> Enum.with_index
+    |> Enum.map(fn {elem, idx} ->
+      with left <- (if idx == 0, do: nil, else: Enum.at(digits, idx - 1)),
+        right <- Enum.at(digits, idx + 1) do
+        cond do
+          left == right -> :both
+          left == elem -> :left
+          right == elem -> :right
+          true -> nil
+        end
+      end
+    end)
   end
 
-  def count_password_possibilities(value, count) do
-    if value <= Day04.input_end do
-      count_password_possibilities(value + 1, count + (if valid_password(value), do: 1, else: 0))
-    else
-      count
-    end
+  def valid_password(x) do
+    Day04.A.valid_password(x)
+      and Integer.digits(x)
+        |> label_digits
+        |> Enum.chunk_every(2, 1, :discard)
+        |> Enum.any?(fn [a, b] -> a == :right and b == :left end)
   end
 end
 
-#IO.inspect(Day04.B.count_password_possibilities(Day04.input_begin, 0))
-
-IO.inspect(Day04.B.valid_password(123444))
-IO.inspect(Day04.B.valid_password(111122))
+IO.inspect(Day04.count_password_possibilities(&Day04.B.valid_password/1, Day04.input_begin, 0))
