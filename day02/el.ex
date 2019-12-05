@@ -5,7 +5,7 @@ defmodule Day02 do
     cond do
       c == "," and acc != "" -> {:cont, acc, ""}
       String.match?(c, ~r/[\d-]/) -> {:cont, acc <> c}
-      true -> {:cont, ""}
+      true -> {:cont, acc}
     end
   end
 
