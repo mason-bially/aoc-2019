@@ -8,7 +8,7 @@ try do
     memory = :array.set(1, noun, init_memory)
     memory = :array.set(2, verb, memory)
 
-    memory = Day02.run_program({memory, 0})
+    memory = Day02.run_program(%{memory: memory, pc: 0})
 
     result = :array.get(0, memory)
     if result == 19690720, do: throw({noun, verb})

@@ -21,12 +21,12 @@ defmodule Day02 do
 
   def parameter_mode_position(index) do
     fn
-      ({memory, pointer}, {:i}) -> :array.get(:array.get(pointer + index, memory), memory)
-      ({memory, pointer}, value) -> :array.set(:array.get(pointer + index, memory), value, memory)
+      (%{memory: memory, pc: pointer}, {:i}) -> :array.get(:array.get(pointer + index, memory), memory)
+      (%{memory: memory, pc: pointer}, value) -> :array.set(:array.get(pointer + index, memory), value, memory)
     end
   end
 
-  def decode_opcode({memory, pointer} = program) do
+  def decode_opcode(%{memory: memory, pc: pointer} = program) do
     instruction = :array.get(pointer, memory)
     {
       program,
@@ -34,18 +34,24 @@ defmodule Day02 do
     }
   end
 
-  def execute_opcode({{memory, pointer} = program, instruction}) do
+  def execute_opcode({%{memory: memory, pc: pointer} = program, instruction}) do
     case instruction do
-      {1, [a, b, c]} -> {c.(program, a.(program, {:i}) + b.(program, {:i})), pointer + 4}
-      {2, [a, b, c]} -> {c.(program, a.(program, {:i}) * b.(program, {:i})), pointer + 4}
-      {99, _} -> {memory}
+      {1, [a, b, c]} -> %{program |
+        memory: c.(program, a.(program, {:i}) + b.(program, {:i})),
+        pc: pointer + 4
+      }
+      {2, [a, b, c]} -> %{program |
+        memory: c.(program, a.(program, {:i}) * b.(program, {:i})),
+        pc: pointer + 4
+      }
+      {99, _} -> %{memory: memory}
     end
   end
 
   def run_program(program) do
     case program do
-      {_, _} -> program |> decode_opcode |> execute_opcode |> run_program
-      {memory} -> memory
+      %{memory: _, pc: _} -> program |> decode_opcode |> execute_opcode |> run_program
+      %{memory: memory} -> memory
     end
   end
 end
