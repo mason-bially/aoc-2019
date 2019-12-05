@@ -7,4 +7,4 @@ memory = :array.set(2, 2, memory)
 memory = Day02.run_program({memory, 0})
 
 result = :array.get(0, memory)
-IO.inspect(result)
+IO.inspect(result) # 6568671

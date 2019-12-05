@@ -14,5 +14,5 @@ try do
     if result == 19690720, do: throw({noun, verb})
   end
 catch
-  {noun, verb} -> IO.inspect(100*noun + verb)
+  {noun, verb} -> IO.inspect(100*noun + verb) # 3951
 end

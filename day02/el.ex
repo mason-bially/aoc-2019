@@ -4,56 +4,47 @@ defmodule Day02 do
   def intcode_splitter(c, acc) do
     cond do
       c == "," and acc != "" -> {:cont, acc, ""}
-      c >= "0" or c <= "9" -> {:cont, acc <> c}
+      String.match?(c, ~r/[\d-]/) -> {:cont, acc <> c}
       true -> {:cont, ""}
     end
   end
 
   def read_intcode(file_path) do
     File.stream!(file_path, [encoding: :utf8], 1)
-    |> Stream.chunk_while("", &intcode_splitter/2, fn acc -> {:cont, acc, ""} end)
+    |> Stream.chunk_while("",
+      &intcode_splitter/2,
+      (fn acc -> if acc != "", do: {:cont, acc, ""}, else: {:cont, ""} end))
     |> Stream.map(&elem(Integer.parse(&1), 0))
     |> Enum.to_list()
     |> :array.from_list()
   end
 
-  def opcode_1({memory, pointer} = _program) do
-    read_a = :array.get(pointer + 1, memory)
-    read_b = :array.get(pointer + 2, memory)
-    dest_c = :array.get(pointer + 3, memory)
-
-    a = :array.get(read_a, memory)
-    b = :array.get(read_b, memory)
-    c = a + b
-    memory = :array.set(dest_c, c, memory)
-
-    {memory, pointer + 4}
+  def parameter_mode_position(index) do
+    fn
+      ({memory, pointer}, {:i}) -> :array.get(:array.get(pointer + index, memory), memory)
+      ({memory, pointer}, value) -> :array.set(:array.get(pointer + index, memory), value, memory)
+    end
   end
 
-  def opcode_2({memory, pointer} = _program) do
-    read_a = :array.get(pointer + 1, memory)
-    read_b = :array.get(pointer + 2, memory)
-    dest_c = :array.get(pointer + 3, memory)
-
-    a = :array.get(read_a, memory)
-    b = :array.get(read_b, memory)
-    c = a * b
-    memory = :array.set(dest_c, c, memory)
-
-    {memory, pointer + 4}
+  def decode_opcode({memory, pointer} = program) do
+    instruction = :array.get(pointer, memory)
+    {
+      program,
+      {instruction, [parameter_mode_position(1), parameter_mode_position(2), parameter_mode_position(3)]}
+    }
   end
 
-  def execute_opcode({memory, pointer} = program) do
-    case :array.get(pointer, memory) do
-      1 -> opcode_1(program)
-      2 -> opcode_2(program)
-      99 -> {memory}
+  def execute_opcode({{memory, pointer} = program, instruction}) do
+    case instruction do
+      {1, [a, b, c]} -> {c.(program, a.(program, {:i}) + b.(program, {:i})), pointer + 4}
+      {2, [a, b, c]} -> {c.(program, a.(program, {:i}) * b.(program, {:i})), pointer + 4}
+      {99, _} -> {memory}
     end
   end
 
   def run_program(program) do
     case program do
-      {_memory, _pointer} -> run_program(execute_opcode(program))
+      {_, _} -> program |> decode_opcode |> execute_opcode |> run_program
       {memory} -> memory
     end
   end
