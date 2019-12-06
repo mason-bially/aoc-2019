@@ -6,25 +6,46 @@ defmodule Day06 do
     {a, b}
   end
 
-  def update_object_orbiter({orbiters, orbit_count}, new_orbiter) do
-    orbiters = MapSet.put(orbiters, new_orbiter)
-
-    {orbiters, orbit_count}
+  defmodule Object do
+    defstruct orbits: nil, orbiters: MapSet.new(), depth: 0
   end
 
-  def insert_orbit(%{} = map, {orbitee, orbiter}) do
-    object = Map.get(map, orbitee, {MapSet.new(), 0})
-    object = update_object_orbiter(object, orbiter)
-    map = Map.put(map, orbitee, object)
-    map = Map.put_new(map, orbiter, {MapSet.new(), 0})
+  def insert_orbit_update_orbitee(%Object{} = object, {_, orbiter}) do
+    %{object | orbiters: MapSet.put(object.orbiters, orbiter)}
+  end
+  def insert_orbit_update_orbitee(nil, edge) do
+    insert_orbit_update_orbitee(%Object{}, edge)
+  end
+
+  def insert_orbit_update_orbiter(%Object{orbits: nil} = object, {orbitee, _}) do
+    %{object | orbits: orbitee}
+  end
+  def insert_orbit_update_orbiter(nil, edge) do
+    insert_orbit_update_orbiter(%Object{}, edge)
+  end
+
+  def insert_orbit(%{} = map, {orbitee, orbiter} = edge) do
+    {_, map} = Map.get_and_update(map, orbitee,
+      fn value -> {value, insert_orbit_update_orbitee(value, edge)} end)
+    {_, map} = Map.get_and_update(map, orbiter,
+      fn value -> {value, insert_orbit_update_orbiter(value, edge)} end)
     map
   end
 
-  def objects_set_orbit_count(map, object \\ "COM", count \\ 0)
-  def objects_set_orbit_count(%{} = map, object, count) do
-    {orbiters, _} = Map.get(map, object)
-    map = Map.put(map, object, {orbiters, count})
+  def objects_set_orbit_depth(map, object \\ "COM", depth \\ 0)
+  def objects_set_orbit_depth(%{} = map, object, depth) do
+    {%{orbiters: orbiters}, map} =
+      Map.get_and_update!(map, object,
+        fn value -> {value, %{value | depth: depth}} end)
+    Enum.reduce(orbiters, map, &objects_set_orbit_depth(&2, &1, depth + 1))
+  end
 
-    Enum.reduce(orbiters, map, &objects_set_orbit_count(&2, &1, count + 1))
+  def orbit_list(%{} = map, thing, com \\ "COM") do
+    Stream.unfold(thing, fn
+      nil -> nil
+      orbit when orbit == com -> {orbit, nil}
+      orbit -> {orbit, Map.fetch!(map, orbit).orbits}
+    end)
+    |> Enum.to_list
   end
 end
