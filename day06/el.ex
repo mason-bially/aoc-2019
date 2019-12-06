@@ -10,25 +10,17 @@ defmodule Day06 do
     defstruct orbits: nil, orbiters: MapSet.new(), depth: 0
   end
 
-  def insert_orbit_update_orbitee(%Object{} = object, {_, orbiter}) do
-    %{object | orbiters: MapSet.put(object.orbiters, orbiter)}
-  end
-  def insert_orbit_update_orbitee(nil, edge) do
-    insert_orbit_update_orbitee(%Object{}, edge)
-  end
-
-  def insert_orbit_update_orbiter(%Object{orbits: nil} = object, {orbitee, _}) do
-    %{object | orbits: orbitee}
-  end
-  def insert_orbit_update_orbiter(nil, edge) do
-    insert_orbit_update_orbiter(%Object{}, edge)
-  end
-
-  def insert_orbit(%{} = map, {orbitee, orbiter} = edge) do
+  def insert_orbit(%{} = map, {orbitee, orbiter}) do
     {_, map} = Map.get_and_update(map, orbitee,
-      fn value -> {value, insert_orbit_update_orbitee(value, edge)} end)
+      fn v ->
+        with obj <- (v || %Object{}) do
+          {v, %{obj | orbiters: MapSet.put(obj.orbiters, orbiter)}}
+        end
+      end)
     {_, map} = Map.get_and_update(map, orbiter,
-      fn value -> {value, insert_orbit_update_orbiter(value, edge)} end)
+      fn v ->
+        {v, %{v || %Object{} | orbits: orbitee}}
+      end)
     map
   end
 
