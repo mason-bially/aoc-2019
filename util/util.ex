@@ -16,4 +16,8 @@ defmodule Util do
   def stream_comma_seperated(enum) do
     Stream.chunk_while(enum, "", &parse_comma_while/2, &parse_after_emit/1)
   end
+
+  def manhatten_distance({ax, ay}, {bx, by}) do
+    abs(ax - bx) + abs(ay - by)
+  end
 end

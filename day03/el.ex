@@ -36,6 +36,21 @@ defmodule Day03 do
       [coord] ++ path_to_coords(path, next_coordinate(coord, head))
   end
 
+  def next_coordinate_dist({x, y, dist}, instruction) do
+    case instruction do
+      {:U, up} -> {x, y + up, dist + up}
+      {:D, down} -> {x, y - down, dist + down}
+      {:R, right} -> {x + right, y, dist + right}
+      {:L, left} -> {x - left, y, dist + left}
+    end
+  end
+
+  def path_to_coords_dist(path, coord \\ {0, 0, 0})
+  def path_to_coords_dist([], coord), do: [coord]
+  def path_to_coords_dist([head | path], coord) do
+      [coord] ++ path_to_coords_dist(path, next_coordinate_dist(coord, head))
+  end
+
   def coords_to_segments(coords) do
     Stream.chunk_every(coords, 2, 1, :discard)
   end
@@ -66,7 +81,16 @@ defmodule Day03 do
     end
   end
 
-  def manhatten_distance({ax, ay}, {bx, by}) do
-    abs(ax - bx) + abs(ay - by)
+  def intersect_segments([{a0x, a0y, a0d}, {a1x, a1y, a1d}] = _seg_a, [{b0x, b0y, b0d}, {b1x, b1y, b1d}] = _seg_b) do
+    p = intersect_segments([{a0x, a0y}, {a1x, a1y}], [{b0x, b0y}, {b1x, b1y}])
+
+    unless is_nil(p) do
+      {rx, ry} = p
+
+      {adp, ad} = if a0d < a1d, do: {{a0x, a0y}, a0d}, else: {{a1x, a1y}, a1d}
+      {bdp, bd} = if b0d < b1d, do: {{b0x, b0y}, b0d}, else: {{b1x, b1y}, b1d}
+
+      {rx, ry, ad + bd + Util.manhatten_distance(p, adp) + Util.manhatten_distance(p, bdp)}
+    end
   end
 end
