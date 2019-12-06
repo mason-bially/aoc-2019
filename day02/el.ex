@@ -1,19 +1,9 @@
 Code.require_file("../util/util.ex", __DIR__)
 
 defmodule Day02 do
-  def intcode_splitter(c, acc) do
-    cond do
-      c == "," and acc != "" -> {:cont, acc, ""}
-      String.match?(c, ~r/[\d-]/) -> {:cont, acc <> c}
-      true -> {:cont, acc}
-    end
-  end
-
   def read_intcode(file_path) do
     File.stream!(file_path, [encoding: :utf8], 1)
-    |> Stream.chunk_while("",
-      &intcode_splitter/2,
-      (fn acc -> if acc != "", do: {:cont, acc, ""}, else: {:cont, ""} end))
+    |> Util.stream_comma_seperated
     |> Stream.map(&elem(Integer.parse(&1), 0))
     |> Enum.to_list()
     |> :array.from_list()
