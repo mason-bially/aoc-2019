@@ -21,6 +21,17 @@ defmodule Util do
     abs(ax - bx) + abs(ay - by)
   end
 
-  def permutations([]), do: [[]]
-  def permutations(list), do: for elem <- list, rest <- permutations(list--[elem]), do: [elem|rest]
+  def permutations([]) do
+    [[]]
+  end
+  def permutations(list) do
+    for elem <- list,
+        rest <- permutations(list -- [elem]) do
+      [elem | rest]
+    end
+  end
+
+  def result_send(value, dest, key) do
+    send(dest, {key, value})
+  end
 end

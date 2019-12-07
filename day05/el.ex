@@ -2,18 +2,14 @@ Code.require_file("../util/util.ex", __DIR__)
 Code.require_file("../day02/el.ex", __DIR__)
 
 defmodule Day05 do
-
   def parameter_mode_immediate(index) do
     fn
       (%{memory: memory, pc: pointer}, :get) -> :array.get(pointer + index, memory)
     end
   end
 
-  def parameter_mode(mode, index) do
-    case mode do
-      0 -> Day02.parameter_mode_position(index)
-      1 -> parameter_mode_immediate(index)
-    end
+  def fetch_instruction(%{memory: memory, pc: pointer} = program) do
+    {program, :array.get(pointer, memory)}
   end
 
   def decode_instruction_length(opcode) do
@@ -25,28 +21,31 @@ defmodule Day05 do
     end
   end
 
-  def decode_instruction_parameter_count(opcode) do
-    decode_instruction_length(opcode) - 1
+  def decode_opcode({%{} = program, instruction}, decode_instruction_length) do
+    opcode = rem(instruction, 100)
+
+    {program, {instruction, opcode, decode_instruction_length.(opcode)} }
   end
 
-  def decode_instruction_parameters(opcode, mode) do
-    params = Enum.zip(
-      1..decode_instruction_parameter_count(opcode),
-      Stream.concat(Enum.reverse(Integer.digits(mode)), Stream.repeatedly(fn -> 0 end)))
-    for {index, mode} <- params do
-      parameter_mode(mode, index)
+  def decode_parameter_mode(mode, index) do
+    case mode do
+      0 -> Day02.parameter_mode_position(index)
+      1 -> parameter_mode_immediate(index)
     end
   end
 
-  def decode_instruction(%{memory: memory, pc: pointer} = program) do
-    instruction = :array.get(pointer, memory)
-    opcode = rem(instruction, 100)
+  def decode_instruction_parameters(params_count, mode, parameter_mode) do
+    Integer.digits(mode)
+    |> Enum.reverse
+    |> Stream.concat(Stream.repeatedly(fn -> 0 end))
+    |> Enum.zip(1..params_count)
+    |> Enum.map(fn {mode, index} -> parameter_mode.(mode, index) end)
+  end
+
+  def decode_parameters({%{} = program, {instruction, opcode, opcode_length}}, parameter_mode) do
     mode = div(instruction, 100)
 
-    {
-      program,
-      {opcode, decode_instruction_parameters(opcode, mode)}
-    }
+    {program, {opcode, decode_instruction_parameters(opcode_length-1, mode, parameter_mode)}}
   end
 
   def execute_instruction_a({%{memory: _, pc: pointer, io: %{input: input, output: output} = io} = program, instruction}) do
@@ -90,7 +89,13 @@ defmodule Day05 do
   def run_program(program) do
     case program do
       %{pc: nil} -> program
-      %{memory: _, pc: _, io: _} -> program |> decode_instruction |> execute_instruction_b |> run_program
+      %{memory: _, pc: _, io: _} ->
+        program
+        |> fetch_instruction
+        |> decode_opcode(&decode_instruction_length/1)
+        |> decode_parameters(&decode_parameter_mode/2)
+        |> execute_instruction_b
+        |> run_program
     end
   end
 end
