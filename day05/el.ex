@@ -49,15 +49,18 @@ defmodule Day05 do
     }
   end
 
-  def execute_instruction_a({%{memory: _, pc: pointer, io: {input, output}} = program, instruction}) do
+  def execute_instruction_a({%{memory: _, pc: pointer, io: %{input: input, output: output} = io} = program, instruction}) do
     case instruction do
-      {3, [a | _]} -> %{program |
-        memory: a.(program, {:set, input.()}),
-        pc: pointer + 2
-      }
-      {4, [a | _]} ->
-        output.(a.(program, :get))
+      {3, [a | _]} ->
+        {invalue, newio} = input.(io)
         %{program |
+          memory: a.(program, {:set, invalue}),
+          io: newio,
+          pc: pointer + 2
+        }
+      {4, [a | _]} ->
+        %{program |
+          io: output.(io, a.(program, :get)),
           pc: pointer + 2
         }
       inst -> Day02.execute_instruction({program, inst})
@@ -86,8 +89,8 @@ defmodule Day05 do
 
   def run_program(program) do
     case program do
+      %{pc: nil} -> program
       %{memory: _, pc: _, io: _} -> program |> decode_instruction |> execute_instruction_b |> run_program
-      %{memory: memory} -> memory
     end
   end
 end

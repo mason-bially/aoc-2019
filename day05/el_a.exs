@@ -2,9 +2,12 @@ Code.require_file("el.ex", __DIR__)
 
 memory = Day02.read_intcode("day05/input.txt")
 
-io = {
-  fn -> 1 end,
-  &IO.inspect(&1) # 3122865
+io = %{
+  input: fn io -> {1, io} end,
+  output: fn io, v ->
+    IO.inspect(v) # 3122865
+    io
+  end
 }
 
 Day05.run_program(%{memory: memory, pc: 0, io: io})

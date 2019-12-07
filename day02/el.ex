@@ -24,7 +24,7 @@ defmodule Day02 do
     }
   end
 
-  def execute_instruction({%{memory: memory, pc: pointer} = program, instruction}) do
+  def execute_instruction({%{memory: _, pc: pointer} = program, instruction}) do
     case instruction do
       {1, [a, b, c]} -> %{program |
         memory: c.(program, {:set, a.(program, :get) + b.(program, :get)}),
@@ -34,14 +34,14 @@ defmodule Day02 do
         memory: c.(program, {:set, a.(program, :get) * b.(program, :get)}),
         pc: pointer + 4
       }
-      {99, _} -> %{memory: memory}
+      {99, _} -> %{program | pc: nil}
     end
   end
 
   def run_program(program) do
     case program do
+      %{memory: memory, pc: nil} -> memory
       %{memory: _, pc: _} -> program |> decode_instruction |> execute_instruction |> run_program
-      %{memory: memory} -> memory
     end
   end
 end
