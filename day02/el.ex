@@ -11,8 +11,10 @@ defmodule Day02 do
 
   def parameter_mode_position(index) do
     fn
-      (%{memory: memory, pc: pointer}, :get) -> :array.get(:array.get(pointer + index, memory), memory)
-      (%{memory: memory, pc: pointer}, {:set, value}) -> :array.set(:array.get(pointer + index, memory), value, memory)
+      (%{memory: memory, pc: pointer}, :get) ->
+        :array.get(:array.get(pointer + index, memory), memory)
+      (%{memory: memory, pc: pointer}, {:set, value}) ->
+        :array.set(:array.get(pointer + index, memory), value, memory)
     end
   end
 

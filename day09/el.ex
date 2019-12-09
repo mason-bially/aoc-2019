@@ -4,22 +4,24 @@ Code.require_file("../day07/el.ex", __DIR__)
 defmodule Day09 do
   def parameter_mode_relative(index) do
     fn
-      (%{memory: memory, pc: pointer, rbase: rbase}, :get) -> :array.get(:array.get(pointer + index, memory) + rbase, memory)
-      (%{memory: memory, pc: pointer, rbase: rbase}, {:set, value}) -> :array.set(:array.get(pointer + index, memory) + rbase, value, memory)
+      (%{memory: memory, pc: pointer, rbase: rbase}, :get) ->
+        :array.get(:array.get(pointer + index, memory) + rbase, memory)
+      (%{memory: memory, pc: pointer, rbase: rbase}, {:set, value}) ->
+        :array.set(:array.get(pointer + index, memory) + rbase, value, memory)
     end
   end
 
   def decode_instruction_length(opcode) do
-    cond do
-      opcode in [9] -> 2
-      true -> Day05.decode_instruction_length(opcode)
+    case opcode do
+      9 -> 2
+      _ -> Day05.decode_instruction_length(opcode)
     end
   end
 
   def decode_parameter_mode(mode, index) do
-    cond do
-      mode == 2 -> parameter_mode_relative(index)
-      true -> Day05.decode_parameter_mode(mode, index)
+    case mode do
+      2 -> parameter_mode_relative(index)
+      _ -> Day05.decode_parameter_mode(mode, index)
     end
   end
 
@@ -43,6 +45,8 @@ defmodule Day09 do
         |> Day05.decode_parameters(&decode_parameter_mode/2)
         |> execute_instruction
         |> run_program
+      %{memory: memory, io: io} ->
+        run_program(%{memory: memory, io: io, pc: 0, rbase: 0})
     end
   end
 end

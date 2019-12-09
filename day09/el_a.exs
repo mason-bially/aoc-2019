@@ -10,4 +10,4 @@ io = %{
   end
 }
 
-Day09.run_program(%{memory: memory, pc: 0, rbase: 0, io: io})
+Day09.run_program(%{memory: memory, io: io})

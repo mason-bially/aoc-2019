@@ -4,7 +4,8 @@ Code.require_file("../day02/el.ex", __DIR__)
 defmodule Day05 do
   def parameter_mode_immediate(index) do
     fn
-      (%{memory: memory, pc: pointer}, :get) -> :array.get(pointer + index, memory)
+      (%{memory: memory, pc: pointer}, :get) ->
+        :array.get(pointer + index, memory)
     end
   end
 
@@ -96,6 +97,8 @@ defmodule Day05 do
         |> decode_parameters(&decode_parameter_mode/2)
         |> execute_instruction_b
         |> run_program
+        %{memory: memory, io: io} ->
+          run_program(%{memory: memory, io: io, pc: 0})
     end
   end
 end
