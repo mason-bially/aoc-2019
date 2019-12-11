@@ -5,9 +5,11 @@ defmodule Day09 do
   def parameter_mode_relative(index) do
     fn
       (%{memory: memory, pc: pointer, rbase: rbase}, :get) ->
-        :array.get(:array.get(pointer + index, memory) + rbase, memory)
+        addr = :array.get(pointer + index, memory) + rbase
+        if addr > :array.size(memory), do: 0, else: :array.get(addr, memory)
       (%{memory: memory, pc: pointer, rbase: rbase}, {:set, value}) ->
-        :array.set(:array.get(pointer + index, memory) + rbase, value, memory)
+        addr = :array.get(pointer + index, memory) + rbase
+        :array.set(addr, value, memory)
     end
   end
 

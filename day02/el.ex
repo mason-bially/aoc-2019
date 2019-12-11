@@ -12,9 +12,11 @@ defmodule Day02 do
   def parameter_mode_position(index) do
     fn
       (%{memory: memory, pc: pointer}, :get) ->
-        :array.get(:array.get(pointer + index, memory), memory)
+        addr = :array.get(pointer + index, memory)
+        if addr > :array.size(memory), do: 0, else: :array.get(addr, memory)
       (%{memory: memory, pc: pointer}, {:set, value}) ->
-        :array.set(:array.get(pointer + index, memory), value, memory)
+        addr = :array.get(pointer + index, memory)
+        :array.set(addr, value, memory)
     end
   end
 
